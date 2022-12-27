@@ -1,6 +1,6 @@
-import { Fragment, SetStateAction, useRef, useState } from "react";
+import { Fragment, SetStateAction, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface FormErroModalProps {
   open: boolean;

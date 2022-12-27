@@ -1,15 +1,17 @@
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import { Chivo_Mono, Inter, Poppins } from "@next/font/google";
-import styles from "../styles/pages/Home/Home.module.css";
-import Box from "../components/Box";
+import { Chivo_Mono, Poppins } from "@next/font/google";
 import Investor from "../assets/illustrations/investor.svg";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import ReactInputMask from "react-input-mask";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import FormErrorModal from "../components/FormErrorModal";
 import { CheckIcon } from "@heroicons/react/24/outline";
+import Footer from "../components/Footer";
+import Header from "../components/Header";
+import LoadingOverlay from "../components/LoadingOverlay";
+import api from "../api";
 
 const ChivoMono = Chivo_Mono();
 const PoppinsFont = Poppins({ weight: ["500", "600", "700"] });
@@ -18,6 +20,7 @@ const Home = () => {
   const [isInvestor, setIsInvestor] = useState<boolean | undefined>(undefined);
   const [errorModalOpen, setErrorModalOpen] = useState<boolean>(false);
   const [investmentRate, setInvestmentRate] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
@@ -31,6 +34,8 @@ const Home = () => {
   });
 
   const onSubmit = (data: any) => {
+    setLoading(true);
+
     if (data.firstName === "") {
       setErrorModalOpen(true);
       return;
@@ -47,12 +52,20 @@ const Home = () => {
       setErrorModalOpen(true);
       return;
     }
-    if (data.investor === undefined) {
-      setErrorModalOpen(true);
-      return;
-    }
 
-    console.log({ data });
+    api
+      .sendForm(
+        data.firstName,
+        data.secondName,
+        data.telephone,
+        data.email,
+        isInvestor ? isInvestor : false,
+        investmentRate
+      )
+      .then((result) => {
+        if (result.data.success === true)
+          window.location.href = `/obrigado/${data.firstName}-${data.secondName}`;
+      });
   };
 
   return (
@@ -70,39 +83,7 @@ const Home = () => {
       </Head>
 
       <main className="bg-black h-full py-32">
-        <div className="flex justify-center">
-          <Image
-            src={"https://i.ibb.co/1KMWJjW/atlas-globe-png.png"}
-            alt={"Atlas Logo"}
-            className="h-100 w-100 rounded-full"
-            height={150}
-            width={150}
-          />
-        </div>
-
-        <div className="flex justify-center mt-8">
-          <Image
-            height={80}
-            width={200}
-            src={"https://i.ibb.co/mzPwhHR/ATLASWHITE.png"}
-            alt={"Atlas Logo"}
-          />
-        </div>
-
-        <div className="mt-4 flex justify-center">
-          <code
-            className={`font-xl text-white ${ChivoMono.className} flex items-center`}
-          >
-            Powered by{" "}
-            <Image
-              src={"https://i.ibb.co/tKZVJVW/ECMA-TIPOW.png"}
-              height={8}
-              width={80}
-              alt={"Ecma Logo"}
-              className={"ml-2"}
-            />
-          </code>
-        </div>
+        <Header />
 
         <div className="mt-16 flex justify-center">
           <h3
@@ -212,7 +193,7 @@ const Home = () => {
               className={`py-2 px-4 bg-[#202020] rounded-lg text-xl ${ChivoMono.className} ring-2 ring-gray-600 outline-none text-white`}
               placeholder="Número de telefone"
               autoComplete="phone number"
-              {...register("email")}
+              {...register("telephone")}
             />
           </div>
 
@@ -327,12 +308,17 @@ const Home = () => {
             <button
               className={`px-4 py-2 rounded-lg bg-white text-black ${PoppinsFont.className} text-xl tracking-wide font-medium disabled:opacity-25`}
               type={"submit"}
+              hidden={loading}
             >
               Reservar acesso
             </button>
           </div>
         </form>
       </main>
+
+      <Footer />
+
+      <LoadingOverlay open={loading} setOpen={setLoading} />
 
       <FormErrorModal open={errorModalOpen} setOpen={setErrorModalOpen} />
     </>
